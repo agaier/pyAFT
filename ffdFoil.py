@@ -212,7 +212,7 @@ def xfoilEval(foil, wd='/tmp/xfoil/'):
   # Run Xfoil
   # ** Testing on mac requires 'gtimeout' from: brew install coreutils **
   #xFoilPath = 'xfoil'
-  xFoilPath = '/Users/gaiera/Code/pyAFT/xfoil/Xfoil/xfoil'
+  xFoilPath = '/home/gaiera/Code/pyAFT/xfoil/XfoilFixed/bin/xfoil'
   command = (xFoilPath + ' -g < ' + f_comm + ' > ' + wd + 'xfoil' + str(id) + '.out')
   err = os.system('timeout 2s ' + command + ' 2>/dev/null' + ' -k') # handle errors and hangs
   

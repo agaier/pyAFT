@@ -1,6 +1,15 @@
 # pyAFT
 Python Airfoil Tools
 
+## Ubuntu:
+* Download and extract Xfoil binaries from [here](https://drive.google.com/file/d/13-_xNWkz-1-EDod_NKPQy_1QF7V5NRz5/view?usp=sharing)
+  * Test that you can run ```XfoilFixed/bin/xfoil```
+  * You might need to downlaod Fortran ```sudo apt-get install libgfortran3```)
+
+* Put the path to xfoil around 215 of ffdFoil.py (or put a link somewhere nicer, etc.)
+  
+
+
 ## Mac:
 * Download Xfoil binaries [here](https://drive.google.com/drive/folders/1eI0EObX7O90L_x9PwPydvI7Ko3O16kzN).
 
