@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt # plotting foils
 import os         # creating xfoil directory
 import subprocess # 'tail' to read xfoil output
 
-class ffdFoil():
+class FfdFoil():
   def __init__(self, nPts, base=None, defRange=1):
     if isinstance(base, str):
       base = np.genfromtxt(base, delimiter=',')
@@ -129,109 +129,6 @@ class ffdFoil():
 
     return fit, beh
 
-# ---------------------------------------------------------------------------- #
-def polyArea(x,y): # Shoelace formula
-  return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1))) 
-
-
-def getThick(coord,pos):
-    # Assumes 100 pts to a side...
-    assert np.shape(coord)[1] == 200, "thickness constraint assumes 200pt foil: %i pts" %np.shape(coord)[1]
-    top = coord[1,:100]
-    bot = coord[1,100:]
-    tc = top[::-1] - bot[:] # thickness per chord
-    return tc[pos-1]
-
-
-def evalFoil(foil):
-  # Constraints
-  area = polyArea(foil[0,:], foil[1,:])
-  minArea = 0.05
-  maxArea = 0.20
-  midThick= getThick(foil,35) > 0.1
-  endThick= getThick(foil,90) > 0.005
-
-  valid = (area > minArea) & (area < maxArea) & midThick & endThick
-
-  # Evaluate if valid
-  if valid:
-    cd, cl = xfoilEval(foil)
-    fit = -np.log(cd)
-    beh = np.array((cl,area))
-    if cl < 0:
-      valid = False
-
-  if valid:
-    return fit, beh
-  else:
-    return np.nan, np.array((np.nan,np.nan))
- 
-
-def xfoilEval(foil, wd='/tmp/xfoil/'):
-  try:
-      # Create target Directory
-      os.mkdir(wd)
-      print("Directory " , wd ,  " Created ") 
-  except FileExistsError:
-      #print("Directory " , wd ,  " already exists")
-      pass
-
-  if np.shape(foil)[1] != 2: # put in expected form
-    foil = foil.T
-  scipy.random.seed()
-  id = np.random.randint(1e7)
-  #print(id)
-  fname = 'xfoil' + str(id)
-  f_foil = wd + fname + '.foil'
-  f_comm = wd + fname + '.inp'
-  f_data = wd + fname + '.dat'
-  
-  # Write coord file
-  if np.shape(foil)[1] != 2: # put in expected form
-    foil = foil.T
-  np.savetxt(f_foil,foil,header=str(id),fmt='%2f')
-  
-  # Make command file
-  with open(f_comm, 'a') as comm_file:
-      comm_file.write('\n\nPLOP\nG\n\n') # Disable graphics
-      comm_file.write('load ' + f_foil + '\n\n');   # Load Foil
-      comm_file.write('pane\n');
-      comm_file.write('oper\n');    
-      comm_file.write('iter\n');
-      comm_file.write('100\n');
-      comm_file.write('re 1e+06\n');
-      comm_file.write('mach 0.5\n');
-      comm_file.write('visc\n');
-      comm_file.write('pacc\n\n\n');    
-      comm_file.write('alfa 2.7\n');
-      comm_file.write('pwrt\n');
-      comm_file.write(f_data + '\n');
-      comm_file.write('plis\n\n');
-      comm_file.write('quit\n');
-
-  # Run Xfoil
-  # ** Testing on mac requires 'gtimeout' from: brew install coreutils **
-  #xFoilPath = 'xfoil'
-  xFoilPath = '/Users/gaiera/Code/pyAFT/xfoil/Xfoil/xfoil'
-  command = (xFoilPath + ' -g < ' + f_comm + ' > ' + wd + 'xfoil' + str(id) + '.out')
-  err = os.system('timeout 2s ' + command + ' 2>/dev/null' + ' -k') # handle errors and hangs
-  
-  # Get drag and lift values
-  try:
-    line = subprocess.check_output(['tail', '-1', f_data])
-    raw = line.split(None,3)
-    cL = eval(raw[1])
-    cD = eval(raw[2])
-    #print(raw)
-  except:
-    cL = np.nan
-    cD = np.nan
-    #print('*| Xfoil did not converge')
-
-  os.system('rm ' + wd + fname + '.*') # remove log files
-  return cD, cL
-
-   
     
 def naca0012():
   return \
@@ -315,26 +212,3 @@ def naca0012():
             -6.7100e-03, -5.8220e-03, -4.9900e-03, -4.2160e-03, -3.5010e-03,
             -2.8490e-03, -2.2600e-03, -1.7370e-03, -1.2800e-03, -8.9100e-04,
             -5.7200e-04, -3.2200e-04, -1.4300e-04, -3.6000e-05,  0.0000e+00]])
-
-if __name__ == "__main__":
-  nPts = 10
-  naca0012_ffd = ffdFoil(nPts, base='naca0012.csv', defRange=1)
-
-  # Get coordinates of deformation (a deformation is defined as 10 floats between 0 and 1)
-  deform = np.random.rand(naca0012_ffd.nPts)
-  newCoords = naca0012_ffd.express(deform)
-
-  # Evaluate base foil and deformed foil
-  print('Base: cd, cl')
-  print(xfoilEval(naca0012_ffd.base))
-
-  print('New: cd, cl')
-  print(xfoilEval(newCoords))
-
-  # Get Fitness (-log(drag)) and Descriptor (lift, area) from each
-  print('Base: fitness, (cl, area)')
-  print(evalFoil(naca0012_ffd.base))
-
-  print('New: fitness, (cl, area)')
-  print(evalFoil(newCoords))
-
