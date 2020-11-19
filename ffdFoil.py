@@ -128,7 +128,6 @@ class FfdFoil():
     beh = np.clip(beh,0.0,1.0)
 
     return fit, beh
-
     
 def naca0012():
   return \
