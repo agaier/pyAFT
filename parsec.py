@@ -42,7 +42,8 @@ class Parameters(object):
       #param_vector = np.array((0.1155, 0.7695, 0.1391, 0.2788, 0.1244, 0.1516, 0.7519, 0.3076, 0.5116, 0, 0.2629, 0.7630)) #RAE2822 from MATLAB
       param_vector = np.array((0.1155, 0.7695, 0.180, 0.2788, 0.1244, 0.1516, 0.720, 0.5576, 0.5116, 0.5, 0.25, 0.7)) #RAE2822
       if genome is not None:
-        param_vector[np.ix[0,1,2,3,4,5,6,7,10,11]] = genome
+        #param_vector[np.ix_[0,1,2,3,4,5,6,7,10,11]] = genome
+        param_vector[[0,1,2,3,4,5,6,7,10,11]] = genome
        
 
       # Parameter ranges (found by trial and error)
