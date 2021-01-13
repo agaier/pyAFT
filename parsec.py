@@ -39,8 +39,8 @@ class Parameters(object):
     '''
 
     def __init__(self,genome=None):
-      #param_vector = np.array((0.1155, 0.7695, 0.1391, 0.2788, 0.1244, 0.1516, 0.7519, 0.3076, 0.5116, 0, 0.2629, 0.7630)) #RAE2822 from MATLAB
-      param_vector = np.array((0.1155, 0.7695, 0.180, 0.2788, 0.1244, 0.1516, 0.720, 0.5576, 0.5116, 0.5, 0.25, 0.7)) #RAE2822 (for Python my closest fit by hand)
+      param_vector = np.array((0.1155, 0.7695, 0.1391, 0.2788, 0.1244, 0.1516, 0.7519, 0.3076, 0.5116, 0, 0.2629, 0.7630)) #RAE2822 from MATLAB
+      #param_vector = np.array((0.1155, 0.7695, 0.180, 0.2788, 0.1244, 0.1516, 0.720, 0.5576, 0.5116, 0.5, 0.25, 0.7)) #RAE2822 (for Python my closest fit by hand)
       if genome is not None:
         param_vector[[0,1,2,3,4,5,6,7,10,11]] = genome
        
@@ -110,10 +110,13 @@ class Coefficients(object):
     
     def _calc_a_lo(self, parsec_params):
         Amat = self._prepare_linsys_Amat(parsec_params.X_lo)
-        Bvec = np.array([parsec_params.Z_te - parsec_params.dZ_te/2, parsec_params.Z_lo,
+        # Bvec = np.array([parsec_params.Z_te - parsec_params.dZ_te/2, parsec_params.Z_lo,
+        #                     math.tan(parsec_params.alpha_te + parsec_params.beta_te/2),
+        #                     0.0, parsec_params.Z_XX_lo, -math.sqrt(2*parsec_params.r_le_lo)])
+        Bvec = np.array([-parsec_params.Z_te + parsec_params.dZ_te/2, -parsec_params.Z_lo,
                             math.tan(parsec_params.alpha_te + parsec_params.beta_te/2),
-                            0.0, parsec_params.Z_XX_lo, -math.sqrt(2*parsec_params.r_le_lo)])
-        return np.linalg.solve(Amat, Bvec)
+                            0.0, -parsec_params.Z_XX_lo, math.sqrt(2*parsec_params.r_le_lo)])                            
+        return -np.linalg.solve(Amat, Bvec)
     
     def _prepare_linsys_Amat(self, X):
         return np.array(
@@ -121,7 +124,7 @@ class Coefficients(object):
              [X**0.5,        X**1.5,       X**2.5,      X**3.5,       X**4.5,       X**5.5     ],
              [0.5,           1.5,          2.5,         3.5,          4.5,          5.5        ],
              [0.5*X**-0.5,   1.5*X**0.5,   2.5*X**1.5,  3.5*X**2.5,   4.5*X**3.5,   5.5*X**4.5 ],
-             [-0.25*X**-1.5, 0.75*X**-0.5, 3.75*X**0.5, 8.75*X**1.5, 15.75*X**2.5, 24.75*X**3.5],
+             [-0.25*X**-1.5, 0.75*X**-0.5, 3.75*X**0.5, 8.75*X**1.5, 13.25*X**2.5, 24.75*X**3.5],
              [1.0,           0.0,          0.0,         0.0,          0.0,          0.0        ]])
             
 
