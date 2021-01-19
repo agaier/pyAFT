@@ -9,11 +9,10 @@ def polyArea(x,y): # Shoelace formula
   return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1))) 
 
 
-def getThick(coord,pos):
-    # Assumes 100 pts to a side...
-    assert np.shape(coord)[1] == 200, "thickness constraint assumes 200pt foil: %i pts" %np.shape(coord)[1]
-    top = coord[1,:100]
-    bot = coord[1,100:]
+def getThick(coord,pos,pt_per_size = 100):    
+    assert np.shape(coord)[1] == 2*pt_per_size , "thickness constraint assumes 400pt foil: %i pts" %pt_per_size*2
+    top = coord[1,:pt_per_size]
+    bot = coord[1,pt_per_size:]
     tc = top[::-1] - bot[:] # thickness per chord
     return tc[pos-1]
 
@@ -21,13 +20,17 @@ def getThick(coord,pos):
 def evalFoil(foil):
   # Constraints
   area = polyArea(foil[0,:], foil[1,:])
-  minArea = 0.05
-  maxArea = 0.20
-  midThick= getThick(foil,35) > 0.1
-  endThick= getThick(foil,90) > 0.005
-
-  valid = (area > minArea) & (area < maxArea) & midThick & endThick
-
+  # Additional constraints if you are using the FFD not parsec
+  FFD = False
+  if FFD:
+    minArea = 0.05
+    maxArea = 0.20
+    midThick= getThick(foil,35*2) > 0.1
+    endThick= getThick(foil,90*2) > 0.005
+    valid = (area > minArea) & (area < maxArea) & midThick & endThick
+  else:
+    valid = True
+    
   # Evaluate if valid
   if valid:
     cd, cl = xfoilEval(foil)
@@ -53,7 +56,7 @@ def xfoilEval(foil, wd='/tmp/xfoil/'):
 
   if np.shape(foil)[1] != 2: # put in expected form
     foil = foil.T
-  scipy.random.seed()
+  #scipy.random.seed()
   id = np.random.randint(1e7)
   #print(id)
   fname = 'xfoil' + str(id)
@@ -101,7 +104,7 @@ def xfoilEval(foil, wd='/tmp/xfoil/'):
   except:
     cL = np.nan
     cD = np.nan
-    #print('*| Xfoil did not converge')
+    print('*| Xfoil did not converge')
 
   os.system('rm ' + wd + fname + '.*') # remove log files
   return cD, cL
